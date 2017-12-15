@@ -1,0 +1,27 @@
+package com.github.bsamartins.springboot.notifications.controller;
+
+import com.github.bsamartins.springboot.notifications.domain.Credentials;
+import com.github.bsamartins.springboot.notifications.service.JwtAuthenticationService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequestMapping("/api/login")
+public class AuthenticationController {
+
+    @Autowired
+    private JwtAuthenticationService jwtAuthenticationService;
+
+    @RequestMapping(method = RequestMethod.POST)
+    public Mono<JwtAuthenticationService.JwtToken> authenticate(@RequestBody Credentials credentials) throws Exception {
+        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword());
+        return jwtAuthenticationService.reactiveAuthenticate(usernamePasswordAuthenticationToken);
+    }
+
+}

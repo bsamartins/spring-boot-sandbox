@@ -1,10 +1,13 @@
 package com.github.bsamartins.springboot.notifications.configuration;
 
-import com.github.bsamartins.springboot.notifications.filter.JWTAuthorizationWebFilter;
-import com.github.bsamartins.springboot.notifications.service.JwtAuthenticationService;
-import com.github.bsamartins.springboot.notifications.service.ReactiveUserDetailsServiceImpl;
+import com.github.bsamartins.springboot.notifications.security.jwt.JWTAuthenticationConverter;
+import com.github.bsamartins.springboot.notifications.security.UnauthorizedServerAuthenticationEntryPoint;
+import com.github.bsamartins.springboot.notifications.security.jwt.JWTAuthenticationService;
+import com.github.bsamartins.springboot.notifications.security.NoPasswordReactiveAuthenticationManager;
+import com.github.bsamartins.springboot.notifications.security.ReactiveUserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
@@ -14,6 +17,9 @@ import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
+import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
+import org.springframework.security.web.server.authentication.ServerAuthenticationEntryPointFailureHandler;
 
 import static org.springframework.security.config.web.server.SecurityWebFiltersOrder.AUTHENTICATION;
 
@@ -27,6 +33,7 @@ public class WebFluxSecurityConfig {
         return new ReactiveUserDetailsServiceImpl();
     }
 
+    @Primary
     @Bean
     protected ReactiveAuthenticationManager authenticationManager() {
         UserDetailsRepositoryReactiveAuthenticationManager authenticationManager = new UserDetailsRepositoryReactiveAuthenticationManager(reactiveUserDetailsService());
@@ -34,35 +41,24 @@ public class WebFluxSecurityConfig {
         return authenticationManager;
     }
 
+    @Bean NoPasswordReactiveAuthenticationManager noPasswordAuthenticationManager() {
+        return new NoPasswordReactiveAuthenticationManager(reactiveUserDetailsService());
+    }
+
     @Bean
-    SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http, JwtAuthenticationService jwtAuthenticationService) {
+    SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http, AuthenticationWebFilter jwtAuthenticationWebFilter, ServerAuthenticationEntryPoint serverAuthenticationEntryPoint) {
         return http
                 // Demonstrate that method security works
                 // Best practice to use both for defense in depth
-                .addFilterAt(jwtAuthorizationWebFilter(jwtAuthenticationService), AUTHENTICATION)
+                .addFilterAt(jwtAuthenticationWebFilter, AUTHENTICATION)
                 .csrf().disable().authorizeExchange()
                 .pathMatchers("/", "/api/login").permitAll()
                 .pathMatchers("/api/**").authenticated()
-                .and().build();
+                .and()
+                .exceptionHandling().authenticationEntryPoint(serverAuthenticationEntryPoint)
+                .and()
+                .build();
     }
-
-
-//    @Override
-//    protected void configure(HttpSecurity http) throws Exception {
-//        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                .and()
-////                    .addFilterBefore(new JWTAuthorizationFilter(this.authenticationManager, this.jwtAuthenticationService), UsernamePasswordAuthenticationFilter.class)
-//                    .csrf().disable().authorizeRequests()
-//                    .antMatchers("/").permitAll()
-//                    .antMatchers("/api/login").permitAll()
-//                    .antMatchers("/api/**").authenticated();
-//    }
-
-//    @Override
-//    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-//        auth.userDetailsService(userDetailsService())
-//            .passwordEncoder(passwordEncoder());
-//    }
 
     @Bean
     public InitializerBean initializerBean() {
@@ -75,7 +71,22 @@ public class WebFluxSecurityConfig {
     }
 
     @Bean
-    public JWTAuthorizationWebFilter jwtAuthorizationWebFilter(JwtAuthenticationService jwtAuthenticationService) {
-        return new JWTAuthorizationWebFilter(jwtAuthenticationService);
+    public AuthenticationWebFilter jwtAuthenticationWebFilter(NoPasswordReactiveAuthenticationManager noPasswordReactiveAuthenticationManager,
+                                                              JWTAuthenticationConverter jwtAuthenticationConverter,
+                                                              ServerAuthenticationEntryPoint serverAuthenticationEntryPoint) {
+        AuthenticationWebFilter authenticationWebFilter = new AuthenticationWebFilter(noPasswordReactiveAuthenticationManager);
+        authenticationWebFilter.setAuthenticationConverter(jwtAuthenticationConverter);
+        authenticationWebFilter.setAuthenticationFailureHandler(new ServerAuthenticationEntryPointFailureHandler(serverAuthenticationEntryPoint));
+        return authenticationWebFilter;
+    }
+
+    @Bean
+    public ServerAuthenticationEntryPoint serverAuthenticationEntryPoint() {
+        return new UnauthorizedServerAuthenticationEntryPoint();
+    }
+
+    @Bean
+    public JWTAuthenticationConverter jwtAuthenticationConverter(JWTAuthenticationService jwtAuthenticationService) {
+        return new JWTAuthenticationConverter(jwtAuthenticationService);
     }
 }

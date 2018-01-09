@@ -1,4 +1,4 @@
-package com.github.bsamartins.springboot.notifications.service;
+package com.github.bsamartins.springboot.notifications.security.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -22,10 +22,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
 
-import static com.github.bsamartins.springboot.notifications.SecurityConstants.TOKEN_PREFIX;
+import static com.github.bsamartins.springboot.notifications.security.SecurityConstants.TOKEN_PREFIX;
 
 @Service
-public class JwtAuthenticationService {
+public class JWTAuthenticationService {
 
     @Value("app.security.jwt.secret")
     private String jwtSecret;
@@ -65,11 +65,11 @@ public class JwtAuthenticationService {
                 .map(this::createToken);
     }
 
-    private Jws<Claims> parseToken(String token) throws BadCredentialsException {
+    public Jws<Claims> parseToken(String token) throws BadCredentialsException {
         try {
             return Jwts.parser()
                     .setSigningKey(jwtSecret.getBytes())
-                    .parseClaimsJws(token.replace(TOKEN_PREFIX, ""));
+                    .parseClaimsJws(token);
 
         } catch(Exception e) {
             throw new BadCredentialsException("Error parsing token", e);

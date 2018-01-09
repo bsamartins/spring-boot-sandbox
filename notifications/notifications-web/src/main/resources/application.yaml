@@ -49,4 +49,4 @@ app:
   security:
     jwt:
       secret: SecretKeyToGenJWTs
-      duration: PT30S
+      duration: PT10M

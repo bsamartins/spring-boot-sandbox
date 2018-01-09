@@ -1,9 +1,8 @@
 package com.github.bsamartins.springboot.notifications.controller;
 
 import com.github.bsamartins.springboot.notifications.domain.Credentials;
-import com.github.bsamartins.springboot.notifications.service.JwtAuthenticationService;
+import com.github.bsamartins.springboot.notifications.security.jwt.JWTAuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,10 +15,10 @@ import reactor.core.publisher.Mono;
 public class AuthenticationController {
 
     @Autowired
-    private JwtAuthenticationService jwtAuthenticationService;
+    private JWTAuthenticationService jwtAuthenticationService;
 
     @RequestMapping(method = RequestMethod.POST)
-    public Mono<JwtAuthenticationService.JwtToken> authenticate(@RequestBody Credentials credentials) throws Exception {
+    public Mono<JWTAuthenticationService.JwtToken> authenticate(@RequestBody Credentials credentials) throws Exception {
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword());
         return jwtAuthenticationService.reactiveAuthenticate(usernamePasswordAuthenticationToken);
     }

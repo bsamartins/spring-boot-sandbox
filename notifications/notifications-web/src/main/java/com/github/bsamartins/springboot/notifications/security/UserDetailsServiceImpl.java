@@ -1,4 +1,4 @@
-package com.github.bsamartins.springboot.notifications.service;
+package com.github.bsamartins.springboot.notifications.security;
 
 import com.github.bsamartins.springboot.notifications.domain.persistence.User;
 import com.github.bsamartins.springboot.notifications.persistence.UserRepository;

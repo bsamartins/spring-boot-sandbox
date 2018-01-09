@@ -52,8 +52,8 @@ public class WebFluxSecurityConfig {
                 // Best practice to use both for defense in depth
                 .addFilterAt(jwtAuthenticationWebFilter, AUTHENTICATION)
                 .csrf().disable().authorizeExchange()
-                .pathMatchers("/", "/api/login").permitAll()
                 .pathMatchers("/api/**").authenticated()
+                .pathMatchers("/**").permitAll()
                 .and()
                 .exceptionHandling().authenticationEntryPoint(serverAuthenticationEntryPoint)
                 .and()

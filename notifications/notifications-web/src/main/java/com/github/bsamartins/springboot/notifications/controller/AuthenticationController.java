@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/api/login")
+@RequestMapping("/auth")
 public class AuthenticationController {
 
     @Autowired
     private JWTAuthenticationService jwtAuthenticationService;
 
-    @RequestMapping(method = RequestMethod.POST)
-    public Mono<JWTAuthenticationService.JwtToken> authenticate(@RequestBody Credentials credentials) throws Exception {
+    @RequestMapping(path = "/token", method = RequestMethod.POST)
+    public Mono<JWTAuthenticationService.JwtToken> issueToken(@RequestBody Credentials credentials) throws Exception {
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword());
         return jwtAuthenticationService.reactiveAuthenticate(usernamePasswordAuthenticationToken);
     }

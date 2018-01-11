@@ -57,7 +57,7 @@ public class JWTAuthenticationService {
                 .setExpiration(Date.from(LocalDateTime.now().plus(jwtDuration).toInstant(ZoneOffset.UTC)))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret.getBytes())
                 .compact();
-        return new JwtToken(TOKEN_PREFIX + token);
+        return new JwtToken(TOKEN_PREFIX,  token);
     }
 
     public Mono<JwtToken> reactiveAuthenticate(Authentication authentication) {
@@ -78,10 +78,16 @@ public class JWTAuthenticationService {
 
     public static class JwtToken {
 
+        private String type;
         private String token;
 
-        public JwtToken(String token) {
+        public JwtToken(String type, String token) {
+            this.type = type;
             this.token = token;
+        }
+
+        public String getType() {
+            return this.type;
         }
 
         public String getToken() {

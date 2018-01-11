@@ -61,11 +61,6 @@ public class WebFluxSecurityConfig {
     }
 
     @Bean
-    public InitializerBean initializerBean() {
-        return new InitializerBean();
-    }
-
-    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
